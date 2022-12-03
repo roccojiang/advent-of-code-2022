@@ -13,6 +13,26 @@ fun show(m : move) : string
     Paper    -> "Paper"
     Scissors -> "Scissors"
 
+type outcome
+  Win
+  Lose
+  Draw
+
+fun show(o : outcome) : string
+  match o
+    Win  -> "Win"
+    Lose -> "Lose"
+    Draw -> "Draw"
+
+
+// effect state<a>
+//   fun get() : a
+//   fun put(x : a) : ()
+
+// fun gets(f)
+//   get().f.put
+
+
 fun parse-opponent-move(c : char) : <exn,parse> move
   match c
     'A' -> Rock
@@ -39,3 +59,33 @@ fun parse-input() : io list<(move, move)>
   match parsed.either
     Left(msg)    -> msg.throw
     Right(moves) -> moves
+
+
+fun play-round(opponent : move, player : move) : outcome
+  fun wins(pl : move, op : move) : bool
+    match (pl, op)
+      (Rock, Scissors)  -> True
+      (Scissors, Paper) -> True
+      (Paper, Rock)     -> True
+      _                 -> False
+  
+  if wins(player, opponent) then Win
+  else if wins(opponent, player) then Lose
+  else Draw
+
+fun score-shape(m : move) : int
+  match m
+    Rock     -> 1
+    Paper    -> 2
+    Scissors -> 3
+
+fun score-outcome(o : outcome) : int
+  match o
+    Lose -> 0
+    Draw -> 3
+    Win   -> 6
+
+
+fun part1()
+  parse-input().map fn((op, pl)) { pl.score-shape + play-round(op, pl).score-outcome }.sum
+  
