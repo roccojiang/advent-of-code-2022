@@ -11,9 +11,9 @@ fun parse-input() : io list<list<int>>
         item
       pstring("\n")
       elf
-  match parsed.maybe
-    Nothing -> [[]]
-    Just(elfs) -> elfs
+  match parsed.either
+    Left(msg) -> msg.throw
+    Right(elfs) -> elfs
 
 
 fun insert(e: int, sorted: list<int>) : list<int>
