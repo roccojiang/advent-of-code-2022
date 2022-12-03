@@ -7,6 +7,7 @@ type move
   Paper
   Scissors
 
+// these seem unnaturally verbose, especially needing to define equality
 fun show(m : move) : string
   match m
     Rock     -> "Rock"
@@ -54,6 +55,7 @@ fun parse-round-outcome(c : char) : exn outcome
     _   -> throw("parse: unexpected round outcome")
 
 
+// this effect must be parameterised with its return type!
 effect<a> fun interpret-column(p : char) : a
 
 fun parse-input() : <io,interpret-column<a>> list<(move, a)>
@@ -99,6 +101,7 @@ fun score-outcome(o : outcome) : int
     Win  -> 6
 
 
+// playing around with using handlers to interpret column 2 differently
 fun part1() : io int
   with fun interpret-column(c) c.parse-player-move
   parse-input().map fn((op, pl)) { pl.score-shape + play-round(op, pl).score-outcome }.sum
