@@ -86,6 +86,5 @@ fun score-outcome(o : outcome) : int
     Win   -> 6
 
 
-fun part1()
+fun part1() : io int
   parse-input().map fn((op, pl)) { pl.score-shape + play-round(op, pl).score-outcome }.sum
-  
