@@ -2,13 +2,9 @@ import std/os/path
 import std/os/file
 import std/text/parse
 
-alias rucksack = list<char>
+import utils/input
 
-fun parse-input(parser : () -> <io,parse|e> a) : <io|e> a
-  val parsed = read-text-file(cwd()/"day03/input.txt").slice.parse(parser)
-  match parsed.either
-    Left(msg)        -> msg.throw
-    Right(rucksacks) -> rucksacks
+alias rucksack = list<char>
 
 fun parse-rucksack() : parse rucksack
   val rucksack = many
@@ -54,14 +50,14 @@ fun common-item(xs : list<char>, ys : list<char>) : exn char
 
 
 fun part1() : io int
-  parse-input(parse-individual-rucksacks)
+  "day03".get-input(parse-individual-rucksacks)
   .map fn(rucksack)
     val (c1, c2) = rucksack.compartments
     common-item(c1, c2).priority
   .sum
 
 fun part2() : io int
-  parse-input(parse-grouped-rucksacks)
+  "day03".get-input(parse-grouped-rucksacks)
   .map fn(trio) 
     // Pre: trio list contains 3 rucksacks
     val Cons(elf1, Cons(elf2, Cons(elf3, Nil))) = trio

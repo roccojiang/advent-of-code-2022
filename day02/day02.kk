@@ -2,6 +2,8 @@ import std/os/path
 import std/os/file
 import std/text/parse
 
+import utils/input
+
 type move
   Rock
   Paper
@@ -58,17 +60,13 @@ fun parse-round-outcome(c : char) : exn outcome
 // this effect must be parameterised with its return type!
 effect<a> fun interpret-column(p : char) : a
 
-fun parse-input() : <io,interpret-column<a>> list<(move, a)>
-  val parsed = read-text-file(cwd()/"day02/input.txt").slice.parse
-    many
-      val column-one = alpha().parse-opponent-move
-      char(' ')
-      val column-two = alpha().interpret-column
-      char('\n')
-      (column-one, column-two)
-  match parsed.either
-    Left(msg)    -> msg.throw
-    Right(moves) -> moves
+fun parse-columns() : <exn,parse,interpret-column<a>> list<(move, a)>
+  many
+    val column-one = alpha().parse-opponent-move
+    char(' ')
+    val column-two = alpha().interpret-column
+    char('\n')
+    (column-one, column-two)
 
 fun winning-move(opponent : move) : move
   match opponent
@@ -101,11 +99,14 @@ fun score-outcome(o : outcome) : int
     Win  -> 6
 
 
+fun get-columns() : <io,interpret-column<a>> list<(move, a)>
+  "day02".get-input(parse-columns)
+
 // playing around with using handlers to interpret column 2 differently
 fun part1() : io int
   with fun interpret-column(c) c.parse-player-move
-  parse-input().map fn((op, pl)) { pl.score-shape + play-round(op, pl).score-outcome }.sum
+  get-columns().map fn((op, pl)) { pl.score-shape + play-round(op, pl).score-outcome }.sum
 
 fun part2() : io int
   with fun interpret-column(c) c.parse-round-outcome
-  parse-input().map fn((op, out)) { out.score-outcome + play-for-outcome(op, out).score-shape }.sum
+  get-columns().map fn((op, out)) { out.score-outcome + play-for-outcome(op, out).score-shape }.sum
