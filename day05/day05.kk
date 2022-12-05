@@ -41,7 +41,8 @@ fun get-input() : io (list<string>, list<string>)
 
   (stacks, instrs)
 
-alias stack = (int, list<char>)
+alias crate = char
+alias stack = (int, list<crate>)
 fun show(s : stack) : string
   val (i, crates) = s
   "stack " ++ i.show ++ ": " ++ crates.string
@@ -51,7 +52,7 @@ fun show(m : move) : string
   val (cnt, from, to) = m
   "move " ++ cnt.show ++ " from " ++ from.show ++ " to " ++ to.show
 
-fun parse-crate() : parse char
+fun parse-crate() : parse crate
   char('[')
   val crate = alpha()
   char(']')
@@ -96,3 +97,49 @@ fun get-parsed(parsed : parse-error<a>) : exn a
   match parsed.either
     Left(err)      -> err.throw
     Right(success) -> success
+
+effect state<a>
+  fun get(i : int) : a
+  fun put(x : a, i : int) : ()
+
+fun run-state(init : list<a>, action : () -> <state<a>,exn,div|e> b) : <exn,div|e> (b, list<a>)
+  var st := init.vector
+  with handler
+    return(x)     (x, st.list)
+    fun get(i)    st[i]
+    fun put(x, i) st[i] := x 
+  action()
+
+fun push(n : int, c : crate) : state<stack> ()
+  val (i, stack) = get(n)
+  (i, Cons(c, stack)).put(n)
+
+fun pop(n : int) : <state<stack>,exn> crate
+  val (i, stack : list<crate>) = get(n)
+  (i, stack.tail).put(n)
+  stack.head.from-just
+
+fun exec-move(move : move) : <state<stack>,exn> ()
+  val (cnt, from, to) = move
+  repeat(cnt)
+    val crate = pop(from - 1)
+    push(to - 1, crate)
+
+fun exec-moves(moves : list<move>) : <state<stack>,exn> ()
+  moves.foreach(exec-move)
+
+fun first-crate(stack : stack) : exn crate
+  stack.snd.head.from-just
+
+fun part1()
+  val (stacks, instrs) = get-parsed-input()
+  val (_, state) = run-state(stacks){instrs.exec-moves}
+  state.map(first-crate).string
+
+fun test-st()
+  // push(0, 'd')
+  pop(0)
+
+fun test()
+  val (_, state) = run-state([(0, ['a','b','c'])]){test-st()}
+  state
