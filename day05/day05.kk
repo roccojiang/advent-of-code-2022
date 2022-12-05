@@ -2,9 +2,6 @@ import std/os/path
 import std/os/file
 import std/text/parse
 
-fun get-input() : io (list<string>, list<string>)
-  read-text-file(cwd()/"day05/input.txt").lines.span fn(s) { s != "" }
-
 fun from-just(mx : maybe<a>) : exn a
   match mx
     Just(x) -> x
@@ -37,13 +34,22 @@ fun transpose(xss' : list<list<a>>) : <div,exn> list<list<a>>
 fun transpose(ss : list<string>) : <div,exn> list<string>
   ss.map(list).transpose.map(string)
 
-fun process-input()
-  val (raw-stacks, instrs) = get-input()
+fun get-input() : io (list<string>, list<string>)
+  val (raw-stacks, raw-instrs) = read-text-file(cwd()/"day05/input.txt").lines.span fn(s) { s != "" }
   val stacks = raw-stacks.map fn(s) { s.substrings-n(4) }.transpose.map fn(s) { s.reverse.join }
+  val instrs = raw-instrs.filter fn(s) { !s.list.all(is-white) }
 
   (stacks, instrs)
 
 alias stack = (int, list<char>)
+fun show(s : stack) : string
+  val (i, crates) = s
+  "stack " ++ i.show ++ ": " ++ crates.string
+
+alias move = (int, int, int)
+fun show(m : move) : string
+  val (cnt, from, to) = m
+  "move " ++ cnt.show ++ " from " ++ from.show ++ " to " ++ to.show
 
 fun parse-crate() : parse char
   char('[')
@@ -62,9 +68,31 @@ fun parse-stack() : parse stack
 
   (i, crates.reverse)
 
-// process-input().fst.map fn(i) { i.get-parsed(parse-stack).show-tuple(show, fn(cs) { cs.string } ) }
-fun get-parsed(input : string, parser : () -> <io,parse|e> a) : <io|e> a
-  val parsed = input.slice.parse(parser)
+fun parse-move() : parse move
+  pstring("move")
+  whitespace()
+  val cnt = pint()
+  whitespace()
+  pstring("from")
+  whitespace()
+  val from = pint()
+  whitespace()
+  pstring("to")
+  whitespace()
+  val to = pint()
+
+  (cnt, from, to)
+
+
+fun get-parsed-input()
+  val (raw-stacks, raw-instrs) = get-input()
+
+  val stacks = raw-stacks.map fn(s) { s.slice.parse(parse-stack).get-parsed }
+  val instrs = raw-instrs.map fn(i) { i.slice.parse(parse-move).get-parsed }
+
+  (stacks, instrs)
+
+fun get-parsed(parsed : parse-error<a>) : exn a
   match parsed.either
     Left(err)      -> err.throw
     Right(success) -> success
