@@ -42,10 +42,9 @@ fun get-input() : io (list<string>, list<string>)
   (stacks, instrs)
 
 alias crate = char
-alias stack = (int, list<crate>)
+alias stack = list<crate>
 fun show(s : stack) : string
-  val (i, crates) = s
-  "stack " ++ i.show ++ ": " ++ crates.string
+  "stack: " ++ s.string
 
 alias move = (int, int, int)
 fun show(m : move) : string
@@ -60,14 +59,14 @@ fun parse-crate() : parse crate
 
 fun parse-stack() : parse stack
   whitespace()
-  val i = pint()
+  pint()
   whitespace()
   val crates = many
     val crate = parse-crate()
     whitespace0()
     crate
 
-  (i, crates.reverse)
+  crates.reverse
 
 fun parse-move() : parse move
   pstring("move")
@@ -110,36 +109,45 @@ fun run-state(init : list<a>, action : () -> <state<a>,exn,div|e> b) : <exn,div|
     fun put(x, i) st[i] := x 
   action()
 
-fun push(n : int, c : crate) : state<stack> ()
-  val (i, stack) = get(n)
-  (i, Cons(c, stack)).put(n)
+fun push(i : int, c : crate) : state<stack> ()
+  val stack = get(i)
+  Cons(c, stack).put(i)
 
-fun pop(n : int) : <state<stack>,exn> crate
-  val (i, stack : list<crate>) = get(n)
-  (i, stack.tail).put(n)
+fun pop(i : int) : <state<stack>,exn> crate
+  val stack : list<crate> = get(i)
+  stack.tail.put(i)
   stack.head.from-just
 
-fun exec-move(move : move) : <state<stack>,exn> ()
+fun pushs(i : int, cs : list<crate>) : state<stack> ()
+  val stack = get(i)
+  (cs ++ stack).put(i)
+
+fun pops(i : int, n : int) : <state<stack>,exn> list<crate>
+  val stack : list<crate> = get(i)
+  stack.drop(n).put(i)
+  stack.take(n)
+
+fun exec-move-pt1(move : move) : <state<stack>,exn> ()
   val (cnt, from, to) = move
   repeat(cnt)
     val crate = pop(from - 1)
     push(to - 1, crate)
 
-fun exec-moves(moves : list<move>) : <state<stack>,exn> ()
-  moves.foreach(exec-move)
+fun exec-move-pt2(move : move) : <state<stack>,exn> ()
+  val (cnt, from, to) = move
+  val crates = pops(from - 1, cnt)
+  pushs(to - 1, crates)
 
-fun first-crate(stack : stack) : exn crate
-  stack.snd.head.from-just
+fun top-crate(stack : stack) : exn crate
+  stack.head.from-just
 
-fun part1()
+fun concat-top-crates(exec-move : move -> <state<stack>,exn> ()) : io string
   val (stacks, instrs) = get-parsed-input()
-  val (_, state) = run-state(stacks){instrs.exec-moves}
-  state.map(first-crate).string
+  val (_, state) = run-state(stacks){instrs.foreach(exec-move)}
+  state.map(top-crate).string
 
-fun test-st()
-  // push(0, 'd')
-  pop(0)
+fun part1() : io string
+  concat-top-crates(exec-move-pt1)
 
-fun test()
-  val (_, state) = run-state([(0, ['a','b','c'])]){test-st()}
-  state
+fun part2() : io string
+  concat-top-crates(exec-move-pt2)
