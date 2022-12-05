@@ -1,0 +1,15 @@
+module list
+
+import utils/maybe
+
+// https://hackage.haskell.org/package/base-4.17.0.0/docs/src/Data.OldList.html#transpose
+pub fun transpose(xss' : list<list<a>>) : <div,exn> list<list<a>>
+  match xss'
+    Nil -> Nil
+    Cons(Nil, xss) -> xss.transpose
+    Cons( Cons(x, xs), xss ) -> 
+      fun combine(y : a, h : list<a>, ys : list<a>, t : list<list<a>>) : <div,exn> list<list<a>>
+        Cons( Cons(y, h), Cons(ys, t).transpose )
+
+      val (hds, tls) = xss.map fn(xs') { (xs'.head.from-just, xs'.tail) }.unzip
+      combine(x, hds, xs, tls)
