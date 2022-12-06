@@ -13,3 +13,8 @@ pub fun transpose(xss' : list<list<a>>) : <div,exn> list<list<a>>
 
       val (hds, tls) = xss.map fn(xs') { (xs'.head.from-just, xs'.tail) }.unzip
       combine(x, hds, xs, tls)
+
+pub fun nub-by(xs' : list<a>, eq : (a, a) -> bool) : div list<a>
+  match xs'
+    Nil -> Nil
+    Cons(x, xs) -> Cons( x, (xs.filter fn(y) { !eq(x, y) }).nub-by(eq) )
