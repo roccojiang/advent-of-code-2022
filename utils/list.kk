@@ -1,6 +1,6 @@
 module list
 
-import utils/maybe
+import utils/ord
 
 // https://hackage.haskell.org/package/base-4.17.0.0/docs/src/Data.OldList.html#transpose
 pub fun transpose(xss' : list<list<a>>) : <div,exn> list<list<a>>
@@ -11,10 +11,15 @@ pub fun transpose(xss' : list<list<a>>) : <div,exn> list<list<a>>
       fun combine(y : a, h : list<a>, ys : list<a>, t : list<list<a>>) : <div,exn> list<list<a>>
         Cons( Cons(y, h), Cons(ys, t).transpose )
 
-      val (hds, tls) = xss.map fn(xs') { (xs'.head.from-just, xs'.tail) }.unzip
+      val (hds, tls) = xss.map fn(xs') { (xs'.head.unjust, xs'.tail) }.unzip
       combine(x, hds, xs, tls)
 
-pub fun nub-by(xs' : list<a>, eq : (a, a) -> bool) : div list<a>
+pub fun nub-by(xs' : list<a>, eq : (a, a) -> bool): list<a>
   match xs'
     Nil -> Nil
-    Cons(x, xs) -> Cons( x, (xs.filter fn(y) { !eq(x, y) }).nub-by(eq) )
+    Cons(x, xs) -> Cons( x, (xs.filter fn(y) { !eq(x, y) }).unsafe-decreasing.nub-by(eq) )
+
+pub fun nub(xs' : list<a>): ord<a> list<a>
+  match xs'
+    Nil -> Nil
+    Cons(x, xs) -> Cons( x, (xs.filter fn(y) { x !=! y }).unsafe-decreasing.nub )
