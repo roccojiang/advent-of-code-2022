@@ -4,7 +4,6 @@ import std/text/parse
 
 import utils/input
 import utils/list
-import utils/maybe
 import utils/string
 
 alias crate = char
@@ -37,7 +36,7 @@ fun push(i : int, c : crate) : state<stack> ()
 fun pop(i : int) : <state<stack>,exn> crate
   val stack : list<crate> = get(i)
   stack.tail.put(i)
-  stack.head.from-just
+  stack.head.unjust
 
 fun pushs(i : int, cs : list<crate>) : state<stack> ()
   val stack = get(i)
@@ -94,7 +93,7 @@ fun get-parsed-input() : io (list<stack>, list<move>)
 
 
 fun top-crate(stack : stack) : exn crate
-  stack.head.from-just
+  stack.head.unjust
 
 fun exec-move-pt1(move : move) : <state<stack>,exn> ()
   val (cnt, from, to) = move
