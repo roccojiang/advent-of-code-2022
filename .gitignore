@@ -39,3 +39,7 @@ Temporary Items
 # Koka
 .koka/*
 
+# Advent of Code
+**/input.txt
+**/test.txt
+
